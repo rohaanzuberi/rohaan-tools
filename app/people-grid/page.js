@@ -4,15 +4,11 @@ import { useState, useEffect } from "react";
 
 const LIFE_EXPECTANCY = 80;
 const WEEKS_PER_YEAR = 52;
-const TOOL_URL = "https://rohaanzuberi.com/people-grid";
+const TOOL_URL = "https://tools.rohaanzuberi.com/people-grid";
 const SHARE_TEXT = "I just counted how many times I'll actually see the people I love most. The number hit different. Try it yourself...";
 
 const DEFAULT_PEOPLE = [
-  { id: "parent1", label: "Parent", emoji: "🫂", name: "", age: 65, visitsPerYear: 4, visitLabel: "visits", leaveAge: null },
-  { id: "parent2", label: "Other parent", emoji: "🫂", name: "", age: 63, visitsPerYear: 4, visitLabel: "visits", leaveAge: null },
-  { id: "child", label: "Child at home", emoji: "🧒", name: "", age: 8, visitsPerYear: 52, visitLabel: "weekends", leaveAge: 18 },
-  { id: "friend", label: "Close friend", emoji: "🤝", name: "", age: 32, visitsPerYear: 6, visitLabel: "meetups", leaveAge: null },
-  { id: "partner", label: "Partner", emoji: "❤️", name: "", age: 34, visitsPerYear: 365, visitLabel: "days", leaveAge: null },
+  { id: "person1", label: "Person", emoji: "👤", name: "", age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null },
 ];
 
 const SOCIALS = [
@@ -161,19 +157,25 @@ function ShareBar() {
 
 function PersonCard({ person, onUpdate, onRemove, index }) {
   const [messageSent, setMessageSent] = useState(false);
-  const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - person.age) * WEEKS_PER_YEAR));
+
+  const age = Number(person.age) || 0;
+  const visitsPerYear = Number(person.visitsPerYear) || 0;
+
+  const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - age) * WEEKS_PER_YEAR));
   const totalWeeks = Math.round(LIFE_EXPECTANCY * WEEKS_PER_YEAR);
-  const livedWeeks = Math.round(person.age * WEEKS_PER_YEAR);
-  const pct = Math.round((livedWeeks / totalWeeks) * 100);
+  const livedWeeks = Math.round(age * WEEKS_PER_YEAR);
+  const pct = age ? Math.round((livedWeeks / totalWeeks) * 100) : 0;
 
   let touchpoints, touchpointLabel;
   if (person.leaveAge) {
-    const yearsLeft = Math.max(0, person.leaveAge - person.age);
-    touchpoints = Math.round(yearsLeft * person.visitsPerYear);
+    const yearsLeft = Math.max(0, person.leaveAge - age);
+    touchpoints = Math.round(yearsLeft * visitsPerYear);
     touchpointLabel = `${touchpoints.toLocaleString()} more weekends before they leave home.`;
   } else {
-    touchpoints = Math.round((weeksLeft / WEEKS_PER_YEAR) * person.visitsPerYear);
-    touchpointLabel = `${touchpoints.toLocaleString()} more ${person.visitLabel}. Ever.`;
+    touchpoints = Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
+    touchpointLabel = age && visitsPerYear
+      ? `${touchpoints.toLocaleString()} more ${person.visitLabel}. Ever.`
+      : "Enter their age and visits per year.";
   }
 
   const displayName = person.name.trim() || person.label;
@@ -203,11 +205,13 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
           />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{
-            fontSize: "11px", color: "#1c1c1c", letterSpacing: "0.08em",
-            background: "rgba(28,28,28,0.07)", borderRadius: "20px",
-            padding: "4px 10px", fontWeight: "500",
-          }}>{pct}% lived</span>
+          {age > 0 && (
+            <span style={{
+              fontSize: "11px", color: "#1c1c1c", letterSpacing: "0.08em",
+              background: "rgba(28,28,28,0.07)", borderRadius: "20px",
+              padding: "4px 10px", fontWeight: "500",
+            }}>{pct}% lived</span>
+          )}
           <button onClick={onRemove} style={{
             background: "none", border: "none", cursor: "pointer",
             color: "rgba(0,0,0,0.18)", fontSize: "18px", padding: "0", lineHeight: 1,
@@ -221,9 +225,11 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
         </span>
       </div>
 
-      <div style={{ background: "#f0ede8", borderRadius: "10px", padding: "14px 14px 12px", marginBottom: "16px" }}>
-        <WeeksGrid totalWeeks={Math.min(totalWeeks, 4160)} livedWeeks={livedWeeks} />
-      </div>
+      {age > 0 && (
+        <div style={{ background: "#f0ede8", borderRadius: "10px", padding: "14px 14px 12px", marginBottom: "16px" }}>
+          <WeeksGrid totalWeeks={Math.min(totalWeeks, 4160)} livedWeeks={livedWeeks} />
+        </div>
+      )}
 
       <div style={{ borderLeft: "2px solid #2c2c2c", paddingLeft: "14px", marginBottom: "16px" }}>
         <div style={{
@@ -246,7 +252,8 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
               <input
                 type="number"
                 value={person[field.key]}
-                onChange={e => onUpdate({ ...person, [field.key]: Math.max(0, Math.min(field.max, Number(e.target.value))) })}
+                onChange={e => onUpdate({ ...person, [field.key]: e.target.value === "" ? "" : Math.max(0, Math.min(field.max, Number(e.target.value))) })}
+                placeholder="—"
                 style={{
                   background: "#fff", border: "1px solid rgba(0,0,0,0.1)",
                   borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px",
@@ -304,15 +311,17 @@ export default function PeopleGrid() {
     if (!newName.trim()) return;
     setPeople(p => [...p, {
       id: `custom-${Date.now()}`, label: "Person", emoji: newEmoji,
-      name: newName, age: 35, visitsPerYear: 4, visitLabel: "visits", leaveAge: null,
+      name: newName, age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null,
     }]);
     setNewName(""); setNewEmoji("👤"); setAdding(false);
   };
 
   const totalMoments = people.reduce((acc, p) => {
-    const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - p.age) * WEEKS_PER_YEAR));
-    if (p.leaveAge) return acc + Math.round(Math.max(0, p.leaveAge - p.age) * p.visitsPerYear);
-    return acc + Math.round((weeksLeft / WEEKS_PER_YEAR) * p.visitsPerYear);
+    const age = Number(p.age) || 0;
+    const visitsPerYear = Number(p.visitsPerYear) || 0;
+    const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - age) * WEEKS_PER_YEAR));
+    if (p.leaveAge) return acc + Math.round(Math.max(0, p.leaveAge - age) * visitsPerYear);
+    return acc + Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
   }, 0);
 
   return (
@@ -421,7 +430,6 @@ export default function PeopleGrid() {
 
         <div style={{ height: "12px" }} />
 
-        {/* Share bar */}
         <ShareBar />
 
         {/* Footer */}
