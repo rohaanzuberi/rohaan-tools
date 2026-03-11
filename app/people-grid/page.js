@@ -8,7 +8,11 @@ const TOOL_URL = "https://tools.rohaanzuberi.com/people-grid";
 const SHARE_TEXT = "I just counted how many times I'll actually see the people I love most. The number hit different. Try it yourself...";
 
 const DEFAULT_PEOPLE = [
-  { id: "person1", label: "Person", emoji: "👤", name: "", age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null },
+  { id: "parent1", label: "Parent", emoji: "🫂", name: "", age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null },
+  { id: "parent2", label: "Other parent", emoji: "🫂", name: "", age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null },
+  { id: "child", label: "Child at home", emoji: "🧒", name: "", age: "", visitsPerYear: "", visitLabel: "weekends", leaveAge: 18 },
+  { id: "friend", label: "Close friend", emoji: "🤝", name: "", age: "", visitsPerYear: "", visitLabel: "meetups", leaveAge: null },
+  { id: "partner", label: "Partner", emoji: "❤️", name: "", age: "", visitsPerYear: "", visitLabel: "days", leaveAge: null },
 ];
 
 const SOCIALS = [
@@ -170,7 +174,9 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
   if (person.leaveAge) {
     const yearsLeft = Math.max(0, person.leaveAge - age);
     touchpoints = Math.round(yearsLeft * visitsPerYear);
-    touchpointLabel = `${touchpoints.toLocaleString()} more weekends before they leave home.`;
+    touchpointLabel = age && visitsPerYear
+      ? `${touchpoints.toLocaleString()} more weekends before they leave home.`
+      : "Enter their age and visits per year.";
   } else {
     touchpoints = Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
     touchpointLabel = age && visitsPerYear
@@ -339,7 +345,6 @@ export default function PeopleGrid() {
         opacity: revealed ? 1 : 0, transform: revealed ? "translateY(0)" : "translateY(20px)",
         transition: "opacity 0.9s ease, transform 0.9s ease",
       }}>
-        {/* Header */}
         <div style={{ marginBottom: "48px" }}>
           <div style={{ fontSize: "10px", letterSpacing: "0.26em", color: "rgba(28,28,28,0.4)", textTransform: "uppercase", marginBottom: "18px", fontWeight: "600" }}>
             The people grid
@@ -385,7 +390,6 @@ export default function PeopleGrid() {
           </div>
         </div>
 
-        {/* Cards */}
         {people.map((person, i) => (
           <PersonCard key={person.id} person={person} index={i}
             onUpdate={(u) => updatePerson(i, u)}
@@ -393,7 +397,6 @@ export default function PeopleGrid() {
           />
         ))}
 
-        {/* Add person */}
         {adding ? (
           <div style={{ background: "#faf8f5", border: "1px solid rgba(28,28,28,0.12)", borderRadius: "16px", padding: "20px", marginBottom: "12px" }}>
             <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
@@ -415,7 +418,6 @@ export default function PeopleGrid() {
           }}>+ add someone</button>
         )}
 
-        {/* Total counter */}
         <div style={{ background: "#1c1c1c", borderRadius: "16px", padding: "32px 24px", margin: "8px 0 12px", textAlign: "center" }}>
           <div style={{ color: "rgba(245,242,237,0.35)", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "12px", fontWeight: "600" }}>
             Total moments left across everyone
@@ -432,7 +434,6 @@ export default function PeopleGrid() {
 
         <ShareBar />
 
-        {/* Footer */}
         <div style={{ background: "#faf8f5", borderRadius: "20px", padding: "40px 28px", border: "1px solid rgba(28,28,28,0.07)", textAlign: "center", marginTop: "12px" }}>
           <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(22px, 5vw, 28px)", fontWeight: "600", color: "#1c1c1c", lineHeight: "1.35", margin: "0 0 14px" }}>
             Don't let it just be a number.
