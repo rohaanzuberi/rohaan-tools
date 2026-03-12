@@ -84,13 +84,10 @@ function WeeksGrid({ totalWeeks, livedWeeks }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "2px" }}>
       {Array.from({ length: capped }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: "5px", height: "5px", borderRadius: "1px", flexShrink: 0,
-            backgroundColor: i < livedWeeks ? "#2c2c2c" : "rgba(44,44,44,0.1)",
-          }}
-        />
+        <div key={i} style={{
+          width: "5px", height: "5px", borderRadius: "1px", flexShrink: 0,
+          backgroundColor: i < livedWeeks ? "#2c2c2c" : "rgba(44,44,44,0.1)",
+        }} />
       ))}
     </div>
   );
@@ -112,11 +109,7 @@ function ShareBar() {
   };
 
   return (
-    <div style={{
-      background: "#faf8f5", borderRadius: "20px",
-      padding: "28px 24px", border: "1px solid rgba(28,28,28,0.07)",
-      marginBottom: "12px",
-    }}>
+    <div style={{ background: "#faf8f5", borderRadius: "20px", padding: "28px 24px", border: "1px solid rgba(28,28,28,0.07)", marginBottom: "12px" }}>
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
         <div style={{ fontSize: "10px", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(28,28,28,0.35)", fontWeight: "600", marginBottom: "8px" }}>
           Share with someone who needs to see this
@@ -130,11 +123,8 @@ function ShareBar() {
           const isHovered = hoveredIndex === i;
           const isCopied = social.name === "Copy link" && copied;
           return (
-            <button
-              key={social.name}
-              onClick={() => handleShare(social)}
-              onMouseEnter={() => setHoveredIndex(i)}
-              onMouseLeave={() => setHoveredIndex(null)}
+            <button key={social.name} onClick={() => handleShare(social)}
+              onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)}
               style={{
                 display: "flex", alignItems: "center", gap: "7px",
                 background: isHovered ? social.color : "rgba(28,28,28,0.04)",
@@ -144,8 +134,7 @@ function ShareBar() {
                 fontSize: "12px", fontWeight: "600", cursor: "pointer",
                 letterSpacing: "0.03em", transition: "all 0.2s ease",
                 fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
+              }}>
               {social.icon}
               {isCopied ? "Copied!" : social.name}
             </button>
@@ -159,48 +148,32 @@ function ShareBar() {
   );
 }
 
-function getChildMode(age) {
-  // If age is under 18, show weekends until they leave home
-  // If 18 or over, treat like any other person with visits
-  return Number(age) > 0 && Number(age) < 18 ? "young" : "adult";
-}
-
 function PersonCard({ person, onUpdate, onRemove, index }) {
   const [messageSent, setMessageSent] = useState(false);
 
   const age = Number(person.age) || 0;
   const visitsPerYear = Number(person.visitsPerYear) || 0;
+  const isYoungChild = person.isChild && age > 0 && age < 18;
+  const isAdultChild = person.isChild && age >= 18;
 
   const totalWeeks = Math.round(LIFE_EXPECTANCY * WEEKS_PER_YEAR);
   const livedWeeks = Math.round(age * WEEKS_PER_YEAR);
   const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - age) * WEEKS_PER_YEAR));
   const pct = age ? Math.round((livedWeeks / totalWeeks) * 100) : 0;
 
-  // Smart child mode
-  const isYoungChild = person.isChild && getChildMode(age) === "young";
-  const isAdultChild = person.isChild && getChildMode(age) === "adult";
-
-  let touchpoints, touchpointLabel, visitLabelDisplay;
-
+  let touchpoints, touchpointLabel;
   if (isYoungChild) {
     const yearsUntil18 = Math.max(0, 18 - age);
-    // ~2 weekends per month at home = ~104 weekends/yr but realistically 52 weekends, most spent at home
-    const weekendsPerYear = visitsPerYear || 52;
-    touchpoints = Math.round(yearsUntil18 * weekendsPerYear);
-    visitLabelDisplay = "weekends / yr at home";
-    touchpointLabel = age && visitsPerYear
-      ? `${touchpoints.toLocaleString()} weekends left before they turn 18.`
-      : "Enter their age and weekends per year.";
+    touchpoints = Math.round(yearsUntil18 * WEEKS_PER_YEAR);
+    touchpointLabel = `${touchpoints.toLocaleString()} weekends left before they turn 18.`;
   } else {
     touchpoints = Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
-    visitLabelDisplay = person.isChild ? "visits / yr" : `${person.visitLabel} / yr`;
     touchpointLabel = age && visitsPerYear
-      ? `${touchpoints.toLocaleString()} more ${person.isChild ? "visits" : person.visitLabel}. Ever.`
+      ? `${touchpoints.toLocaleString()} more ${person.visitLabel}. Ever.`
       : "Enter their age and visits per year.";
   }
 
   const displayName = person.name.trim() || person.label;
-
   const waMessage = `Hey. I don't say this enough, but I love you. I was just thinking about you and wanted you to know that. That's it. No reason. Just love.`;
 
   return (
@@ -214,17 +187,14 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ fontSize: "17px" }}>{person.emoji}</span>
-          <input
-            value={person.name}
-            onChange={e => onUpdate({ ...person, name: e.target.value })}
+          <input value={person.name} onChange={e => onUpdate({ ...person, name: e.target.value })}
             placeholder="Their name..."
             style={{
               background: "transparent", border: "none", outline: "none",
               color: "#1c1c1c", fontSize: "16px",
               fontFamily: "'Cormorant Garamond', serif", fontWeight: "700",
               width: "150px", letterSpacing: "0.01em",
-            }}
-          />
+            }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {age > 0 && (
@@ -234,16 +204,13 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
               padding: "4px 10px", fontWeight: "500",
             }}>{pct}% lived</span>
           )}
-          <button onClick={onRemove} style={{
-            background: "none", border: "none", cursor: "pointer",
-            color: "rgba(0,0,0,0.18)", fontSize: "18px", padding: "0", lineHeight: 1,
-          }}>×</button>
+          <button onClick={onRemove} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(0,0,0,0.18)", fontSize: "18px", padding: "0", lineHeight: 1 }}>×</button>
         </div>
       </div>
 
       <div style={{ paddingLeft: "28px", marginBottom: "14px" }}>
         <span style={{ fontSize: "11px", color: "rgba(28,28,28,0.28)", letterSpacing: "0.04em", fontStyle: "italic" }}>
-          {person.label}{isYoungChild ? " · under 18" : isAdultChild && age > 0 ? " · adult" : ""}
+          {person.label}{isYoungChild ? " · under 18" : isAdultChild ? " · adult" : ""}
         </span>
       </div>
 
@@ -254,64 +221,44 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
       )}
 
       <div style={{ borderLeft: "2px solid #2c2c2c", paddingLeft: "14px", marginBottom: "16px" }}>
-        <div style={{
-          color: "#1c1c1c", fontSize: "15px",
-          fontFamily: "'Cormorant Garamond', serif",
-          fontWeight: "600", lineHeight: "1.4",
-        }}>{touchpointLabel}</div>
+        <div style={{ color: "#1c1c1c", fontSize: "15px", fontFamily: "'Cormorant Garamond', serif", fontWeight: "600", lineHeight: "1.4" }}>
+          {isYoungChild && age ? touchpointLabel : !isYoungChild ? touchpointLabel : "Enter their age."}
+        </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <label style={{ color: "rgba(28,28,28,0.35)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: "600" }}>
-              Age
-            </label>
-            <input
-              type="number"
-              value={person.age}
+            <label style={{ color: "rgba(28,28,28,0.35)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: "600" }}>Age</label>
+            <input type="number" value={person.age}
               onChange={e => onUpdate({ ...person, age: e.target.value === "" ? "" : Math.max(0, Math.min(100, Number(e.target.value))) })}
               placeholder="—"
-              style={{
-                background: "#fff", border: "1px solid rgba(0,0,0,0.1)",
-                borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px",
-                width: "64px", fontSize: "13px", outline: "none",
-              }}
-            />
+              style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px", width: "64px", fontSize: "13px", outline: "none" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <label style={{ color: "rgba(28,28,28,0.35)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: "600" }}>
-              {isYoungChild ? "Weekends / yr" : "Visits / yr"}
-            </label>
-            <input
-              type="number"
-              value={person.visitsPerYear}
-              onChange={e => onUpdate({ ...person, visitsPerYear: e.target.value === "" ? "" : Math.max(0, Math.min(365, Number(e.target.value))) })}
-              placeholder="—"
-              style={{
-                background: "#fff", border: "1px solid rgba(0,0,0,0.1)",
-                borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px",
-                width: "64px", fontSize: "13px", outline: "none",
-              }}
-            />
-          </div>
+
+          {/* Only show visits input for non-young-children */}
+          {!isYoungChild && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <label style={{ color: "rgba(28,28,28,0.35)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: "600" }}>
+                {person.visitLabel} / yr
+              </label>
+              <input type="number" value={person.visitsPerYear}
+                onChange={e => onUpdate({ ...person, visitsPerYear: e.target.value === "" ? "" : Math.max(0, Math.min(365, Number(e.target.value))) })}
+                placeholder="—"
+                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px", width: "64px", fontSize: "13px", outline: "none" }} />
+            </div>
+          )}
         </div>
 
-        <button
-          onClick={() => {
-            window.open(`https://wa.me/?text=${encodeURIComponent(waMessage)}`, "_blank");
-            setMessageSent(true);
-          }}
+        <button onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(waMessage)}`, "_blank"); setMessageSent(true); }}
           style={{
             display: "flex", alignItems: "center", gap: "7px",
             background: messageSent ? "rgba(28,28,28,0.05)" : "#1c1c1c",
             color: messageSent ? "rgba(28,28,28,0.4)" : "#f5f2ed",
-            border: "none", borderRadius: "100px",
-            padding: "8px 16px", fontSize: "12px", fontWeight: "600",
-            cursor: messageSent ? "default" : "pointer",
+            border: "none", borderRadius: "100px", padding: "8px 16px",
+            fontSize: "12px", fontWeight: "600", cursor: messageSent ? "default" : "pointer",
             letterSpacing: "0.04em", transition: "all 0.25s ease", whiteSpace: "nowrap",
-          }}
-        >
+          }}>
           {messageSent ? "Sent ✓" : (
             <>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
@@ -353,9 +300,8 @@ export default function PeopleGrid() {
     const age = Number(p.age) || 0;
     const visitsPerYear = Number(p.visitsPerYear) || 0;
     const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - age) * WEEKS_PER_YEAR));
-    if (p.isChild && getChildMode(age) === "young") {
-      const yearsUntil18 = Math.max(0, 18 - age);
-      return acc + Math.round(yearsUntil18 * (visitsPerYear || 52));
+    if (p.isChild && age > 0 && age < 18) {
+      return acc + Math.round(Math.max(0, 18 - age) * WEEKS_PER_YEAR);
     }
     return acc + Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
   }, 0);
@@ -379,27 +325,16 @@ export default function PeopleGrid() {
           <div style={{ fontSize: "10px", letterSpacing: "0.26em", color: "rgba(28,28,28,0.4)", textTransform: "uppercase", marginBottom: "18px", fontWeight: "600" }}>
             The people grid
           </div>
-          <h1 style={{
-            fontSize: "clamp(28px, 6.5vw, 46px)", fontFamily: "'Cormorant Garamond', serif",
-            fontWeight: "600", lineHeight: "1.15", margin: "0 0 24px", color: "#1c1c1c",
-          }}>
+          <h1 style={{ fontSize: "clamp(28px, 6.5vw, 46px)", fontFamily: "'Cormorant Garamond', serif", fontWeight: "600", lineHeight: "1.15", margin: "0 0 24px", color: "#1c1c1c" }}>
             How much time do you have left with the people who matter most to you?
           </h1>
           <div style={{ width: "32px", height: "1.5px", background: "#1c1c1c", marginBottom: "24px", opacity: 0.2 }} />
           <div style={{ color: "rgba(28,28,28,0.55)", fontSize: "15px", lineHeight: "1.85" }}>
-            <p style={{ margin: "0 0 16px" }}>
-              Nobody decides to take the people they love for granted. It just happens... the calls got shorter. The visits got rarer. We told ourselves there'd be more time... and suddenly, there wasn't.
-            </p>
-            <p style={{ margin: "0 0 16px" }}>
-              We assume time is something we still have plenty of. And in that assumption, we drift away. Not because we don't care. But because we never stopped to look at the actual number.
-            </p>
-            <p style={{ margin: "0 0 24px" }}>
-              The real count of times you'll sit across from them, hear them laugh, be in the same room. This grid will put things into perspective.
-            </p>
+            <p style={{ margin: "0 0 16px" }}>Nobody decides to take the people they love for granted. It just happens... the calls got shorter. The visits got rarer. We told ourselves there'd be more time... and suddenly, there wasn't.</p>
+            <p style={{ margin: "0 0 16px" }}>We assume time is something we still have plenty of. And in that assumption, we drift away. Not because we don't care. But because we never stopped to look at the actual number.</p>
+            <p style={{ margin: "0 0 24px" }}>The real count of times you'll sit across from them, hear them laugh, be in the same room. This grid will put things into perspective.</p>
             <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "20px 22px", border: "1px solid rgba(28,28,28,0.07)" }}>
-              <div style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(28,28,28,0.35)", fontWeight: "600", marginBottom: "14px" }}>
-                How to use it
-              </div>
+              <div style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(28,28,28,0.35)", fontWeight: "600", marginBottom: "14px" }}>How to use it</div>
               {[
                 "Enter the name and age of someone you love",
                 "Set how often you see them in a year",
@@ -407,12 +342,7 @@ export default function PeopleGrid() {
                 "Hit the WhatsApp button. Tell them.",
               ].map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: i < 3 ? "10px" : 0 }}>
-                  <span style={{
-                    minWidth: "20px", height: "20px", borderRadius: "50%",
-                    background: "#1c1c1c", color: "#f5f2ed", fontSize: "10px", fontWeight: "700",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    marginTop: "1px", flexShrink: 0,
-                  }}>{i + 1}</span>
+                  <span style={{ minWidth: "20px", height: "20px", borderRadius: "50%", background: "#1c1c1c", color: "#f5f2ed", fontSize: "10px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "1px", flexShrink: 0 }}>{i + 1}</span>
                   <span style={{ fontSize: "14px", color: "rgba(28,28,28,0.65)", lineHeight: "1.6" }}>{step}</span>
                 </div>
               ))}
@@ -423,8 +353,7 @@ export default function PeopleGrid() {
         {people.map((person, i) => (
           <PersonCard key={person.id} person={person} index={i}
             onUpdate={(u) => updatePerson(i, u)}
-            onRemove={() => removePerson(i)}
-          />
+            onRemove={() => removePerson(i)} />
         ))}
 
         {adding ? (
@@ -441,46 +370,31 @@ export default function PeopleGrid() {
             </div>
           </div>
         ) : (
-          <button onClick={() => setAdding(true)} style={{
-            width: "100%", background: "transparent", border: "1.5px dashed rgba(28,28,28,0.15)",
-            borderRadius: "16px", color: "rgba(28,28,28,0.35)", padding: "14px",
-            fontSize: "13px", cursor: "pointer", marginBottom: "12px", letterSpacing: "0.04em",
-          }}>+ add someone</button>
+          <button onClick={() => setAdding(true)} style={{ width: "100%", background: "transparent", border: "1.5px dashed rgba(28,28,28,0.15)", borderRadius: "16px", color: "rgba(28,28,28,0.35)", padding: "14px", fontSize: "13px", cursor: "pointer", marginBottom: "12px", letterSpacing: "0.04em" }}>
+            + add someone
+          </button>
         )}
 
         <div style={{ background: "#1c1c1c", borderRadius: "16px", padding: "32px 24px", margin: "8px 0 12px", textAlign: "center" }}>
-          <div style={{ color: "rgba(245,242,237,0.35)", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "12px", fontWeight: "600" }}>
-            Total moments left across everyone
-          </div>
+          <div style={{ color: "rgba(245,242,237,0.35)", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "12px", fontWeight: "600" }}>Total moments left across everyone</div>
           <div style={{ fontSize: "clamp(52px, 13vw, 76px)", fontFamily: "'Cormorant Garamond', serif", fontWeight: "700", color: "#f5f2ed", lineHeight: 1, marginBottom: "8px" }}>
             {totalMoments.toLocaleString()}
           </div>
-          <div style={{ color: "rgba(245,242,237,0.28)", fontSize: "12px", letterSpacing: "0.05em" }}>
-            combined visits, days & moments
-          </div>
+          <div style={{ color: "rgba(245,242,237,0.28)", fontSize: "12px", letterSpacing: "0.05em" }}>combined visits, days & moments</div>
         </div>
 
         <div style={{ height: "12px" }} />
-
         <ShareBar />
 
         <div style={{ background: "#faf8f5", borderRadius: "20px", padding: "40px 28px", border: "1px solid rgba(28,28,28,0.07)", textAlign: "center", marginTop: "12px" }}>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(22px, 5vw, 28px)", fontWeight: "600", color: "#1c1c1c", lineHeight: "1.35", margin: "0 0 14px" }}>
-            Don't let it just be a number.
-          </p>
-          <p style={{ color: "rgba(28,28,28,0.45)", fontSize: "14px", lineHeight: "1.8", margin: "0 0 10px", maxWidth: "360px", marginLeft: "auto", marginRight: "auto" }}>
-            The people you just counted are waiting for a message that never comes.
-          </p>
+          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(22px, 5vw, 28px)", fontWeight: "600", color: "#1c1c1c", lineHeight: "1.35", margin: "0 0 14px" }}>Don't let it just be a number.</p>
+          <p style={{ color: "rgba(28,28,28,0.45)", fontSize: "14px", lineHeight: "1.8", margin: "0 0 10px", maxWidth: "360px", marginLeft: "auto", marginRight: "auto" }}>The people you just counted are waiting for a message that never comes.</p>
           <p style={{ color: "rgba(28,28,28,0.32)", fontSize: "14px", lineHeight: "1.7", margin: 0, maxWidth: "340px", marginLeft: "auto", marginRight: "auto", fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic" }}>
             Go back up. Hit the button. Right now, while it still feels like something.
           </p>
           <div style={{ width: "32px", height: "1px", background: "rgba(28,28,28,0.15)", margin: "28px auto 20px" }} />
-          <a
-            href="https://www.instagram.com/rohaanzuberi"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "rgba(28,28,28,0.28)", fontSize: "11px", letterSpacing: "0.1em", textDecoration: "none", borderBottom: "1px solid rgba(28,28,28,0.12)", paddingBottom: "2px" }}
-          >
+          <a href="https://www.instagram.com/rohaanzuberi" target="_blank" rel="noreferrer"
+            style={{ color: "rgba(28,28,28,0.28)", fontSize: "11px", letterSpacing: "0.1em", textDecoration: "none", borderBottom: "1px solid rgba(28,28,28,0.12)", paddingBottom: "2px" }}>
             a free tool, made with love — by rohaan zuberi
           </a>
         </div>
