@@ -8,11 +8,11 @@ const TOOL_URL = "https://tools.rohaanzuberi.com/people-grid";
 const SHARE_TEXT = "I just counted how many times I'll actually see the people I love most. The number hit different. Try it yourself...";
 
 const DEFAULT_PEOPLE = [
-  { id: "parent1", label: "Parent", emoji: "🫂", name: "", age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null },
-  { id: "parent2", label: "Other parent", emoji: "🫂", name: "", age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null },
-  { id: "child", label: "Child at home", emoji: "🧒", name: "", age: "", visitsPerYear: "", visitLabel: "weekends", leaveAge: 18 },
-  { id: "friend", label: "Close friend", emoji: "🤝", name: "", age: "", visitsPerYear: "", visitLabel: "meetups", leaveAge: null },
-  { id: "partner", label: "Partner", emoji: "❤️", name: "", age: "", visitsPerYear: "", visitLabel: "days", leaveAge: null },
+  { id: "parent1", label: "Parent", emoji: "🫂", name: "", age: "", visitsPerYear: "", visitLabel: "visits", isChild: false },
+  { id: "parent2", label: "Other parent", emoji: "🫂", name: "", age: "", visitsPerYear: "", visitLabel: "visits", isChild: false },
+  { id: "child", label: "Child", emoji: "🧒", name: "", age: "", visitsPerYear: "", visitLabel: "weekends", isChild: true },
+  { id: "friend", label: "Close friend", emoji: "🤝", name: "", age: "", visitsPerYear: "", visitLabel: "meetups", isChild: false },
+  { id: "partner", label: "Partner", emoji: "❤️", name: "", age: "", visitsPerYear: "", visitLabel: "days", isChild: false },
 ];
 
 const SOCIALS = [
@@ -159,33 +159,49 @@ function ShareBar() {
   );
 }
 
+function getChildMode(age) {
+  // If age is under 18, show weekends until they leave home
+  // If 18 or over, treat like any other person with visits
+  return Number(age) > 0 && Number(age) < 18 ? "young" : "adult";
+}
+
 function PersonCard({ person, onUpdate, onRemove, index }) {
   const [messageSent, setMessageSent] = useState(false);
 
   const age = Number(person.age) || 0;
   const visitsPerYear = Number(person.visitsPerYear) || 0;
 
-  const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - age) * WEEKS_PER_YEAR));
   const totalWeeks = Math.round(LIFE_EXPECTANCY * WEEKS_PER_YEAR);
   const livedWeeks = Math.round(age * WEEKS_PER_YEAR);
+  const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - age) * WEEKS_PER_YEAR));
   const pct = age ? Math.round((livedWeeks / totalWeeks) * 100) : 0;
 
-  let touchpoints, touchpointLabel;
-  if (person.leaveAge) {
-    const yearsLeft = Math.max(0, person.leaveAge - age);
-    touchpoints = Math.round(yearsLeft * visitsPerYear);
+  // Smart child mode
+  const isYoungChild = person.isChild && getChildMode(age) === "young";
+  const isAdultChild = person.isChild && getChildMode(age) === "adult";
+
+  let touchpoints, touchpointLabel, visitLabelDisplay;
+
+  if (isYoungChild) {
+    const yearsUntil18 = Math.max(0, 18 - age);
+    // ~2 weekends per month at home = ~104 weekends/yr but realistically 52 weekends, most spent at home
+    const weekendsPerYear = visitsPerYear || 52;
+    touchpoints = Math.round(yearsUntil18 * weekendsPerYear);
+    visitLabelDisplay = "weekends / yr at home";
     touchpointLabel = age && visitsPerYear
-      ? `${touchpoints.toLocaleString()} more weekends before they leave home.`
-      : "Enter their age and visits per year.";
+      ? `${touchpoints.toLocaleString()} weekends left before they leave home.`
+      : "Enter their age and weekends per year.";
   } else {
     touchpoints = Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
+    visitLabelDisplay = person.isChild ? "visits / yr" : `${person.visitLabel} / yr`;
     touchpointLabel = age && visitsPerYear
-      ? `${touchpoints.toLocaleString()} more ${person.visitLabel}. Ever.`
+      ? `${touchpoints.toLocaleString()} more ${person.isChild ? "visits" : person.visitLabel}. Ever.`
       : "Enter their age and visits per year.";
   }
 
   const displayName = person.name.trim() || person.label;
-  const waMessage = `Hey. I was just using this tool that counted how many times I'll actually see you in my life... and the number stopped me cold. I don't say this enough — but I love you. I just wanted you to know that.`;
+
+  const waMessage = `Hey. I don't say this enough, but I love you. I was just thinking about you and wanted you to know that. That's it. No reason. Just love.`;
 
   return (
     <div style={{
@@ -227,7 +243,7 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
 
       <div style={{ paddingLeft: "28px", marginBottom: "14px" }}>
         <span style={{ fontSize: "11px", color: "rgba(28,28,28,0.28)", letterSpacing: "0.04em", fontStyle: "italic" }}>
-          {person.label}
+          {person.label}{isYoungChild ? " · under 18" : isAdultChild && age > 0 ? " · adult" : ""}
         </span>
       </div>
 
@@ -247,27 +263,38 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
-          {[
-            { label: "Age", key: "age", max: 100 },
-            { label: "Visits / yr", key: "visitsPerYear", max: 365 },
-          ].map(field => (
-            <div key={field.key} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <label style={{ color: "rgba(28,28,28,0.35)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: "600" }}>
-                {field.label}
-              </label>
-              <input
-                type="number"
-                value={person[field.key]}
-                onChange={e => onUpdate({ ...person, [field.key]: e.target.value === "" ? "" : Math.max(0, Math.min(field.max, Number(e.target.value))) })}
-                placeholder="—"
-                style={{
-                  background: "#fff", border: "1px solid rgba(0,0,0,0.1)",
-                  borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px",
-                  width: "64px", fontSize: "13px", outline: "none",
-                }}
-              />
-            </div>
-          ))}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <label style={{ color: "rgba(28,28,28,0.35)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: "600" }}>
+              Age
+            </label>
+            <input
+              type="number"
+              value={person.age}
+              onChange={e => onUpdate({ ...person, age: e.target.value === "" ? "" : Math.max(0, Math.min(100, Number(e.target.value))) })}
+              placeholder="—"
+              style={{
+                background: "#fff", border: "1px solid rgba(0,0,0,0.1)",
+                borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px",
+                width: "64px", fontSize: "13px", outline: "none",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <label style={{ color: "rgba(28,28,28,0.35)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: "600" }}>
+              {isYoungChild ? "Weekends / yr" : "Visits / yr"}
+            </label>
+            <input
+              type="number"
+              value={person.visitsPerYear}
+              onChange={e => onUpdate({ ...person, visitsPerYear: e.target.value === "" ? "" : Math.max(0, Math.min(365, Number(e.target.value))) })}
+              placeholder="—"
+              style={{
+                background: "#fff", border: "1px solid rgba(0,0,0,0.1)",
+                borderRadius: "8px", color: "#1c1c1c", padding: "5px 10px",
+                width: "64px", fontSize: "13px", outline: "none",
+              }}
+            />
+          </div>
         </div>
 
         <button
@@ -317,7 +344,7 @@ export default function PeopleGrid() {
     if (!newName.trim()) return;
     setPeople(p => [...p, {
       id: `custom-${Date.now()}`, label: "Person", emoji: newEmoji,
-      name: newName, age: "", visitsPerYear: "", visitLabel: "visits", leaveAge: null,
+      name: newName, age: "", visitsPerYear: "", visitLabel: "visits", isChild: false,
     }]);
     setNewName(""); setNewEmoji("👤"); setAdding(false);
   };
@@ -326,7 +353,10 @@ export default function PeopleGrid() {
     const age = Number(p.age) || 0;
     const visitsPerYear = Number(p.visitsPerYear) || 0;
     const weeksLeft = Math.max(0, Math.round((LIFE_EXPECTANCY - age) * WEEKS_PER_YEAR));
-    if (p.leaveAge) return acc + Math.round(Math.max(0, p.leaveAge - age) * visitsPerYear);
+    if (p.isChild && getChildMode(age) === "young") {
+      const yearsUntil18 = Math.max(0, 18 - age);
+      return acc + Math.round(yearsUntil18 * (visitsPerYear || 52));
+    }
     return acc + Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
   }, 0);
 
