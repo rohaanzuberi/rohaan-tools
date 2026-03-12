@@ -189,7 +189,7 @@ function PersonCard({ person, onUpdate, onRemove, index }) {
     touchpoints = Math.round(yearsUntil18 * weekendsPerYear);
     visitLabelDisplay = "weekends / yr at home";
     touchpointLabel = age && visitsPerYear
-      ? `${touchpoints.toLocaleString()} weekends left before they leave home.`
+      ? `${touchpoints.toLocaleString()} weekends left before they turn 18.`
       : "Enter their age and weekends per year.";
   } else {
     touchpoints = Math.round((weeksLeft / WEEKS_PER_YEAR) * visitsPerYear);
